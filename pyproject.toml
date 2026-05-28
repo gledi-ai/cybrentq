@@ -23,8 +23,21 @@ classifiers = [
 dependencies = []
 
 [dependency-groups]
-test = ["pytest==9.0.3", "coverage==7.14.0", "scipy==1.15.3", "numpy==2.2.6"]
-bench = ["scipy==1.15.3", "numpy==2.2.6", "pymodab==1.0.4"]
+test = [
+  "pytest==9.0.3",
+  "coverage==7.14.0",
+  "numpy==2.2.6; python_version < '3.14'",
+  "numpy==2.4.6; python_version >= '3.14'",
+  "scipy==1.15.3; python_version < '3.14'",
+  "scipy==1.17.1; python_version >= '3.14'",
+]
+bench = [
+  "pymodab==1.0.4",
+  "numpy==2.2.6; python_version < '3.14'",
+  "numpy==2.4.6; python_version >= '3.14'",
+  "scipy==1.15.3; python_version < '3.14'",
+  "scipy==1.17.1; python_version >= '3.14'",
+]
 build = ["cython==3.2.4", "setuptools>=77", "wheel"]
 dev = [
   { include-group = "test" },

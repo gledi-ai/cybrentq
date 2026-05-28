@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v8
+      - uses: astral-sh/setup-uv@v8.1.0
         with:
           enable-cache: true
           python-version: "3.14"
@@ -36,7 +36,7 @@ jobs:
         python-version: ["3.10", "3.14"]
     steps:
       - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v8
+      - uses: astral-sh/setup-uv@v8.1.0
         with:
           enable-cache: true
           python-version: ${{ matrix.python-version }}
@@ -50,7 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v8
+      - uses: astral-sh/setup-uv@v8.1.0
         with:
           enable-cache: true
           python-version: "3.14"
@@ -69,7 +69,7 @@ jobs:
           path: |
             coverage.xml
             htmlcov/
-          retention-days: 14
+          retention-days: 7
 
   bench:
     name: Benchmarks (informational)
@@ -77,7 +77,7 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v8
+      - uses: astral-sh/setup-uv@v8.1.0
         with:
           enable-cache: true
           python-version: "3.14"
@@ -90,4 +90,4 @@ jobs:
         with:
           name: bench-output
           path: bench.txt
-          retention-days: 14
+          retention-days: 7
