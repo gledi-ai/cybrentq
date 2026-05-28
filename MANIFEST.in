@@ -1,0 +1,6 @@
+include README.md
+include pyproject.toml
+include setup.py
+recursive-include src/cybrentq *.pyx *.pyi py.typed
+recursive-include tests *.py
+recursive-include benchmarks *.py

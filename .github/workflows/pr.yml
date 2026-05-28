@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint & format check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8
+        with:
+          enable-cache: true
+          python-version: "3.14"
+      - name: Sync dependencies (compiles Cython extension)
+        run: make sync
+      - name: Ruff check + format check
+        run: make check
+
+  test:
+    name: Tests (py ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.14"]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
+      - name: Sync dependencies (compiles Cython extension)
+        run: make sync
+      - name: Run pytest
+        run: make test
+
+  coverage:
+    name: Coverage (py 3.14, traced build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8
+        with:
+          enable-cache: true
+          python-version: "3.14"
+      - name: Run coverage (rebuilds Cython with CYTHON_TRACE=1)
+        run: make cov
+      - name: Generate XML + HTML reports
+        run: |
+          uv run --frozen coverage xml
+          uv run --frozen coverage html
+      - name: Print textual report into job log
+        run: make report
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-report
+          path: |
+            coverage.xml
+            htmlcov/
+          retention-days: 14
+
+  bench:
+    name: Benchmarks (informational)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8
+        with:
+          enable-cache: true
+          python-version: "3.14"
+      - name: Sync dependencies
+        run: make sync
+      - name: Run benchmark smoke
+        run: make bench BENCH_ARGS="--n-calls 500 --repeats 3" | tee bench.txt
+      - name: Upload bench output
+        uses: actions/upload-artifact@v7
+        with:
+          name: bench-output
+          path: bench.txt
+          retention-days: 14

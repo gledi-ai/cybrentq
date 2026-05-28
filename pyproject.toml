@@ -1,0 +1,101 @@
+[build-system]
+requires = ["setuptools>=77", "wheel", "cython>=3.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cybrentq"
+version = "0.1.0"
+description = "A Cython implementation of Brent's root-finding method"
+readme = "README.md"
+requires-python = ">=3.10,<4.0"
+license = "MIT"
+authors = [{ name = "Gledis Caushaj", email = "gledis.caushaj@cardoai.com" }]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Cython",
+  "Topic :: Scientific/Engineering :: Mathematics",
+]
+dependencies = []
+
+[dependency-groups]
+test = ["pytest==9.0.3", "coverage==7.14.0", "scipy==1.15.3", "numpy==2.2.6"]
+bench = ["scipy==1.15.3", "numpy==2.2.6", "pymodab==1.0.4"]
+build = ["cython==3.2.4", "setuptools>=77", "wheel"]
+dev = [
+  { include-group = "test" },
+  { include-group = "bench" },
+  { include-group = "build" },
+  "ruff==0.15.15",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+packages = ["cybrentq"]
+
+[tool.setuptools.package-data]
+cybrentq = ["*.pyi", "py.typed"]
+
+[tool.uv]
+package = true
+exclude-newer = "7d"
+exclude-newer-package = { ruff = false }
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -q"
+
+[tool.coverage.run]
+branch = true
+source = ["cybrentq"]
+plugins = ["Cython.Coverage"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+precision = 2
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+  "A",    # flake8-builtins
+  "B",    # flake8-bugbear
+  "C90",  # mccabe complexity
+  "E",    # pycodestyle errors
+  "F",    # pyflakes
+  "I",    # isort
+  "N",    # pep8-naming
+  "PERF", # perflint
+  "PT",   # flake8-pytest-style
+  "RUF",  # ruff-native
+  "SIM",  # flake8-simplify
+  "TRY",  # tryceratops
+  "UP",   # pyupgrade
+  "W",    # pycodestyle warnings
+]
+ignore = [
+  "COM812", # conflicts with formatter
+  "TRY003", # long messages outside exception class — noisy for ValueError
+  "TRY300", # consider moving to else — often makes code worse
+]
+unfixable = []
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint.isort]
+known-first-party = ["cybrentq"]
+known-third-party = ["numpy", "scipy"]
