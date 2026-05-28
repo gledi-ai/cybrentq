@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cybrentq"
-version = "0.1.1rc1"
+version = "0.1.1rc2"
 description = "A Cython implementation of Brent's root-finding method"
 readme = "README.md"
 requires-python = ">=3.10,<4.0"
