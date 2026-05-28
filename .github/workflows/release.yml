@@ -40,10 +40,11 @@ jobs:
           - { os: windows-latest,   archs: AMD64 }
     steps:
       - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.1.0
       - uses: pypa/cibuildwheel@v3.4.1
         env:
           CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-* cp314-*"
-          CIBW_SKIP: "*-musllinux_i686 *_i686 *-win32 pp*"
+          CIBW_SKIP: "*-musllinux_i686 *_i686 *-win32"
           CIBW_ARCHS: ${{ matrix.archs }}
           CIBW_BUILD_FRONTEND: "build[uv]"
           CIBW_BUILD_VERBOSITY: "1"
