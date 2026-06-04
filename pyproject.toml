@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cybrentq"
-version = "0.1.1rc4"
+version = "0.1.1"
 description = "A Cython implementation of Brent's root-finding method"
 readme = "README.md"
 requires-python = ">=3.10,<4.0"
@@ -25,7 +25,7 @@ dependencies = []
 [dependency-groups]
 test = [
   "pytest==9.0.3",
-  "coverage==7.14.0",
+  "coverage==7.14.1",
   "numpy==2.2.6; python_version < '3.14'",
   "numpy==2.4.6; python_version >= '3.14'",
   "scipy==1.15.3; python_version < '3.14'",
@@ -38,7 +38,7 @@ bench = [
   "scipy==1.15.3; python_version < '3.14'",
   "scipy==1.17.1; python_version >= '3.14'",
 ]
-build = ["cython==3.2.4", "setuptools>=77", "wheel"]
+build = ["cython==3.2.5", "setuptools>=77", "wheel"]
 dev = [
   { include-group = "test" },
   { include-group = "bench" },
