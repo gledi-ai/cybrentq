@@ -53,35 +53,15 @@ jobs:
           CIBW_BUILD_FRONTEND: "build[uv]"
           CIBW_BUILD_VERBOSITY: "1"
           CIBW_TEST_COMMAND: python {project}/scripts/smoke.py
-          # --- Compiler cache (Linux + macOS; Windows/MSVC left untouched). ---
-          # sccache uses the GitHub Actions cache API, so wheels compiled in one
-          # release reuse object files from previous releases.
+          # --- Compiler cache (macOS host build only). ---
+          # sccache uses the GitHub Actions cache API so wheels reuse object files
+          # across releases. Enabled only on the macOS host build: wiring sccache
+          # into the manylinux/musllinux *containers* broke the compile, so Linux
+          # and Windows build with the default toolchain (no cache).
           SCCACHE_GHA_ENABLED: "true"
-          CIBW_ENVIRONMENT_LINUX: >-
-            SCCACHE_GHA_ENABLED=on
-            CC="sccache cc" CXX="sccache c++"
           CIBW_ENVIRONMENT_MACOS: >-
             SCCACHE_GHA_ENABLED=on
             CC="sccache clang" CXX="sccache clang++"
-          # Forward the runner's GHA-cache credentials into the manylinux/musllinux container.
-          CIBW_ENVIRONMENT_PASS_LINUX: >-
-            SCCACHE_GHA_ENABLED ACTIONS_CACHE_URL ACTIONS_RESULTS_URL ACTIONS_RUNTIME_TOKEN
-          # Install the sccache binary inside the build container (static musl build runs on glibc + musl).
-          # This binary becomes the compiler wrapper for the released wheels, so its
-          # download is checksum-verified against the published sccache v0.8.2 artifacts.
-          CIBW_BEFORE_ALL_LINUX: |
-            set -euo pipefail
-            arch="$(uname -m)"
-            case "$arch" in
-              x86_64)  sha=ecda4ddc89a49f1ec6f35bdce5ecbf6f205b399a680d11119d4ce9f6d962104e ;;
-              aarch64) sha=d4b6c04edf7ed687a50be0d3d899dca01bc3037dcf99f16bc46a7b9a76f78db9 ;;
-              *) echo "unsupported arch: $arch" >&2; exit 1 ;;
-            esac
-            url="https://github.com/mozilla/sccache/releases/download/v0.8.2/sccache-v0.8.2-${arch}-unknown-linux-musl.tar.gz"
-            curl -fsSL -o /tmp/sccache.tar.gz "$url"
-            echo "${sha}  /tmp/sccache.tar.gz" | sha256sum -c -
-            tar -xzf /tmp/sccache.tar.gz -C /tmp
-            install -m 0755 /tmp/sccache-*/sccache /usr/local/bin/sccache
       - uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.os }}-${{ matrix.archs }}
