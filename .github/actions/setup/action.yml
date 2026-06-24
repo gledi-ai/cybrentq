@@ -1,0 +1,24 @@
+name: Setup uv environment
+description: Install uv (with cache) and optionally sync deps + compile the Cython extension.
+
+inputs:
+  python-version:
+    description: Python version uv should provide.
+    required: false
+    default: "3.14"
+  sync:
+    description: Whether to run `make sync` (install deps + build the extension).
+    required: false
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - uses: astral-sh/setup-uv@v8.2.0
+      with:
+        enable-cache: true
+        python-version: ${{ inputs.python-version }}
+    - if: ${{ inputs.sync == 'true' }}
+      name: Sync dependencies (compiles Cython extension)
+      shell: bash
+      run: make sync

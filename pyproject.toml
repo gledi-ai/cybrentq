@@ -1,15 +1,25 @@
 [build-system]
-requires = ["setuptools>=77", "wheel", "cython>=3.2"]
+requires = ["setuptools>=77", "setuptools-scm>=8", "wheel", "cython>=3.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "cybrentq"
-version = "0.1.1"
+dynamic = ["version"]
 description = "A Cython implementation of Brent's root-finding method"
 readme = "README.md"
 requires-python = ">=3.10,<4.0"
 license = "MIT"
 authors = [{ name = "Gledis Caushaj", email = "gledis.caushaj@cardoai.com" }]
+keywords = [
+  "brent",
+  "root-finding",
+  "cython",
+  "numerical",
+  "optimization",
+  "bisection",
+  "scipy",
+  "mathematics",
+]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.10",
@@ -22,23 +32,28 @@ classifiers = [
 ]
 dependencies = []
 
+[project.urls]
+Homepage = "https://github.com/gledi-ai/cybrentq"
+Repository = "https://github.com/gledi-ai/cybrentq"
+Documentation = "https://github.com/gledi-ai/cybrentq"
+
 [dependency-groups]
+scipy-stack = [
+  "numpy==2.2.6; python_version < '3.14'",
+  "numpy==2.4.6; python_version >= '3.14'",
+  "scipy==1.15.3; python_version < '3.14'",
+  "scipy==1.17.1; python_version >= '3.14'",
+]
 test = [
   "pytest==9.0.3",
   "coverage==7.14.1",
-  "numpy==2.2.6; python_version < '3.14'",
-  "numpy==2.4.6; python_version >= '3.14'",
-  "scipy==1.15.3; python_version < '3.14'",
-  "scipy==1.17.1; python_version >= '3.14'",
+  { include-group = "scipy-stack" },
 ]
 bench = [
   "pymodab==1.0.4",
-  "numpy==2.2.6; python_version < '3.14'",
-  "numpy==2.4.6; python_version >= '3.14'",
-  "scipy==1.15.3; python_version < '3.14'",
-  "scipy==1.17.1; python_version >= '3.14'",
+  { include-group = "scipy-stack" },
 ]
-build = ["cython==3.2.5", "setuptools>=77", "wheel"]
+build = ["cython==3.2.5", "setuptools>=77", "setuptools-scm>=8", "wheel"]
 dev = [
   { include-group = "test" },
   { include-group = "bench" },
@@ -52,6 +67,10 @@ packages = ["cybrentq"]
 
 [tool.setuptools.package-data]
 cybrentq = ["*.pyi", "py.typed"]
+
+[tool.setuptools_scm]
+version_file = "src/cybrentq/_version.py"
+fallback_version = "0.0.0"
 
 [tool.uv]
 package = true

@@ -1,0 +1,11 @@
+name: Download distribution artifacts
+description: Merge the sdist + wheel artifacts produced earlier in the release into dist/.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/download-artifact@v8
+      with:
+        path: dist
+        pattern: "{sdist,wheels-*}"
+        merge-multiple: true

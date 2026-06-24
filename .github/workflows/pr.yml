@@ -14,18 +14,14 @@ permissions:
 
 jobs:
   lint:
-    name: Lint & format check
+    name: Lint & format (prek)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v8.1.0
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
         with:
-          enable-cache: true
-          python-version: "3.14"
-      - name: Sync dependencies (compiles Cython extension)
-        run: make sync
-      - name: Ruff check + format check
-        run: make check
+          python-version: "3.14" # matches default_language_version in .pre-commit-config.yaml
+      - uses: j178/prek-action@bdca6f102f98e2b4c7029491a53dfd366469e33d # v2
 
   test:
     name: Tests (py ${{ matrix.python-version }})
@@ -33,15 +29,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.14"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
-      - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v8.1.0
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
         with:
-          enable-cache: true
           python-version: ${{ matrix.python-version }}
-      - name: Sync dependencies (compiles Cython extension)
-        run: make sync
       - name: Run pytest
         run: make test
 
@@ -49,11 +42,10 @@ jobs:
     name: Coverage (py 3.14, traced build)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v8.1.0
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
         with:
-          enable-cache: true
-          python-version: "3.14"
+          sync: "false"
       - name: Run coverage (rebuilds Cython with CYTHON_TRACE=1)
         run: make cov
       - name: Generate XML + HTML reports
@@ -76,13 +68,8 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v8.1.0
-        with:
-          enable-cache: true
-          python-version: "3.14"
-      - name: Sync dependencies
-        run: make sync
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
       - name: Run benchmark smoke
         run: make bench BENCH_ARGS="--n-calls 500 --repeats 3" | tee bench.txt
       - name: Upload bench output

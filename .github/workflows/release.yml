@@ -13,11 +13,12 @@ jobs:
     name: Build sdist
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v8.1.0
+      - uses: actions/checkout@v7
         with:
-          enable-cache: true
-          python-version: "3.14"
+          fetch-depth: 0 # full history + tags for setuptools-scm
+      - uses: ./.github/actions/setup
+        with:
+          sync: "false"
       - name: Build sdist
         run: uv build --sdist
       - uses: actions/upload-artifact@v7
@@ -38,18 +39,49 @@ jobs:
           - { os: macos-latest,     archs: arm64 }
           - { os: windows-latest,   archs: AMD64 }
     steps:
-      - uses: actions/checkout@v6
-      - uses: astral-sh/setup-uv@v8.1.0
-      - uses: pypa/cibuildwheel@v3.4.1
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history + tags for setuptools-scm
+      - uses: astral-sh/setup-uv@v8.2.0
+      - name: Set up sccache (compiler cache, GitHub Actions backend)
+        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad # v0.0.9
+      - uses: pypa/cibuildwheel@v4.1.0
         env:
           CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-* cp314-*"
           CIBW_SKIP: "*-musllinux_i686 *_i686 *-win32"
           CIBW_ARCHS: ${{ matrix.archs }}
           CIBW_BUILD_FRONTEND: "build[uv]"
           CIBW_BUILD_VERBOSITY: "1"
-          CIBW_TEST_COMMAND: >-
-            python -c "from cybrentq import brentq;
-            assert abs(brentq(lambda x: x*x-2, 0, 2) - 2**0.5) < 1e-10"
+          CIBW_TEST_COMMAND: python {project}/scripts/smoke.py
+          # --- Compiler cache (Linux + macOS; Windows/MSVC left untouched). ---
+          # sccache uses the GitHub Actions cache API, so wheels compiled in one
+          # release reuse object files from previous releases.
+          SCCACHE_GHA_ENABLED: "true"
+          CIBW_ENVIRONMENT_LINUX: >-
+            SCCACHE_GHA_ENABLED=on
+            CC="sccache cc" CXX="sccache c++"
+          CIBW_ENVIRONMENT_MACOS: >-
+            SCCACHE_GHA_ENABLED=on
+            CC="sccache clang" CXX="sccache clang++"
+          # Forward the runner's GHA-cache credentials into the manylinux/musllinux container.
+          CIBW_ENVIRONMENT_PASS_LINUX: >-
+            SCCACHE_GHA_ENABLED ACTIONS_CACHE_URL ACTIONS_RESULTS_URL ACTIONS_RUNTIME_TOKEN
+          # Install the sccache binary inside the build container (static musl build runs on glibc + musl).
+          # This binary becomes the compiler wrapper for the released wheels, so its
+          # download is checksum-verified against the published sccache v0.8.2 artifacts.
+          CIBW_BEFORE_ALL_LINUX: |
+            set -euo pipefail
+            arch="$(uname -m)"
+            case "$arch" in
+              x86_64)  sha=ecda4ddc89a49f1ec6f35bdce5ecbf6f205b399a680d11119d4ce9f6d962104e ;;
+              aarch64) sha=d4b6c04edf7ed687a50be0d3d899dca01bc3037dcf99f16bc46a7b9a76f78db9 ;;
+              *) echo "unsupported arch: $arch" >&2; exit 1 ;;
+            esac
+            url="https://github.com/mozilla/sccache/releases/download/v0.8.2/sccache-v0.8.2-${arch}-unknown-linux-musl.tar.gz"
+            curl -fsSL -o /tmp/sccache.tar.gz "$url"
+            echo "${sha}  /tmp/sccache.tar.gz" | sha256sum -c -
+            tar -xzf /tmp/sccache.tar.gz -C /tmp
+            install -m 0755 /tmp/sccache-*/sccache /usr/local/bin/sccache
       - uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.os }}-${{ matrix.archs }}
@@ -66,12 +98,9 @@ jobs:
     permissions:
       id-token: write
     steps:
+      - uses: actions/checkout@v7
       - name: Download all artifacts into dist/
-        uses: actions/download-artifact@v8
-        with:
-          path: dist
-          pattern: "{sdist,wheels-*}"
-          merge-multiple: true
+        uses: ./.github/actions/download-dist
       - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@v1.14.0
         with:
@@ -84,6 +113,7 @@ jobs:
     env:
       TAG_REF: ${{ github.ref_name }}
     steps:
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
@@ -97,9 +127,7 @@ jobs:
             --extra-index-url https://pypi.org/simple/ \
             "cybrentq==${VERSION}"
       - name: Smoke test
-        run: |
-          python -c "from cybrentq import brentq;
-          assert abs(brentq(lambda x: x*x-2, 0, 2) - 2**0.5) < 1e-10"
+        run: python scripts/smoke.py
 
   publish-pypi:
     name: Publish to PyPI (manual approval)
@@ -111,11 +139,8 @@ jobs:
     permissions:
       id-token: write
     steps:
+      - uses: actions/checkout@v7
       - name: Download all artifacts into dist/
-        uses: actions/download-artifact@v8
-        with:
-          path: dist
-          pattern: "{sdist,wheels-*}"
-          merge-multiple: true
+        uses: ./.github/actions/download-dist
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@v1.14.0

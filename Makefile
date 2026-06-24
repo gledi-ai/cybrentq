@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help venv lock outdated sync test cov test/cov report cov/report bench build dist clean \
+.PHONY: help venv lock outdated sync test cov test/cov report cov/report bench smoke build dist clean \
         lint lint/fix lint/check fmt fmt/fix fmt/check check
 
 BENCH_ARGS ?=
@@ -14,7 +14,7 @@ help:  ## Show this help.
 venv:  ## Create the project virtualenv via uv (PYTHON_VERSION=3.10).
 	uv venv --seed --link-mode=copy --prompt=cybrentq --python $(PYTHON_VERSION)
 
-lock:  ## Resolve and write uv.lock.
+lock:  ## Resolve and write uv.lock (WARNING: upgrades all dependencies and rewrites uv.lock).
 	uv lock --upgrade --resolution=highest --refresh
 
 outdated:  ## Show outdated direct and transitive dependencies.
@@ -38,6 +38,9 @@ report cov/report:  ## Print the coverage report from the last test-cov run.
 
 bench:  ## Run the benchmark suite (override args via BENCH_ARGS).
 	uv run --frozen python benchmarks/bench_brentq.py $(BENCH_ARGS)
+
+smoke:  ## Run the import-and-solve smoke test against the installed package.
+	uv run --frozen python scripts/smoke.py
 
 lint lint/check:  ## Run ruff linter in check-only mode.
 	uv run --frozen ruff check .
