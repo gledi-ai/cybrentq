@@ -25,3 +25,13 @@ repos:
         args: [--fix, --config=pyproject.toml]
       - id: ruff-format
         args: [--config=pyproject.toml]
+
+  - repo: local
+    hooks:
+      - id: pyrefly
+        name: pyrefly (type check)
+        entry: uv run --frozen pyrefly check
+        language: system
+        types_or: [python, pyi]
+        pass_filenames: false
+        require_serial: true

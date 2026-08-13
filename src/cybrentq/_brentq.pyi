@@ -1,5 +1,5 @@
 from collections.abc import Callable
-from typing import Any, overload
+from typing import Any, Literal, overload
 
 class RootResults:
     root: float
@@ -27,7 +27,7 @@ def brentq(
     xtol: float = ...,
     rtol: float = ...,
     maxiter: int = ...,
-    full_output: bool = False,
+    full_output: Literal[False] = False,
     disp: bool = ...,
 ) -> float: ...
 @overload
@@ -40,6 +40,6 @@ def brentq(
     rtol: float = ...,
     maxiter: int = ...,
     *,
-    full_output: bool = True,
+    full_output: Literal[True],
     disp: bool = ...,
 ) -> tuple[float, RootResults]: ...

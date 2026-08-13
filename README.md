@@ -38,7 +38,7 @@ If you want a minimal install without the Makefile:
 ```bash
 uv venv --python 3.10       # create the venv
 uv sync                     # install project + default groups, compile Cython
-uv sync --group test        # add the test group only
+uv sync --only-group test   # install just the test group, nothing else
 uv sync --no-dev            # consumer-style install (no dev groups)
 ```
 
@@ -67,7 +67,7 @@ root = brentq(lambda x, target: x ** 3 - target, 0.0, 5.0, args=(27.0,))
 # Diagnostics
 root, info = brentq(lambda x: math.cos(x) - x, 0.0, 1.0, full_output=True)
 print(info)
-# RootResults(root=0.7390851332151607, iterations=8, function_calls=10,
+# RootResults(root=0.7390851332151559, iterations=7, function_calls=8,
 #             converged=True, flag='converged')
 ```
 
@@ -86,6 +86,11 @@ brentq(
 ) -> float | tuple[float, RootResults]
 ```
 
+The return type depends on `full_output`, so `_brentq.pyi` splits it into two
+overloads keyed on `Literal[True]` / `Literal[False]`. Pass `full_output=True`
+as a keyword argument — the runtime accepts it positionally, but the stub only
+declares the keyword form, so a type checker rejects the positional one.
+
 ### Errors
 
 | Condition | Behaviour |
@@ -93,7 +98,7 @@ brentq(
 | `f(a)` and `f(b)` have the same sign | `ValueError` |
 | `xtol <= 0`, `rtol < 4*eps`, or `maxiter < 1` | `ValueError` |
 | Iteration budget exhausted and `disp=True` | `ConvergenceError` |
-| Iteration budget exhausted and `disp=False` | returns `(root, RootResults(converged=False))` |
+| Iteration budget exhausted and `disp=False` | returns the last iterate: `(root, RootResults(converged=False, flag='convergence error'))` with `full_output=True`, otherwise the bare `root` |
 | User-supplied `f` raises | exception propagates unchanged |
 
 ## Tests
@@ -108,6 +113,28 @@ uv run pytest                               # all tests
 uv run pytest tests/test_basic.py           # just behaviour / error tests
 uv run pytest tests/test_against_scipy.py   # head-to-head correctness vs scipy
 uv run pytest tests/test_performance.py     # perf regression guard (CI-safe)
+```
+
+### Every supported Python at once
+
+`noxfile.py` drives pytest against 3.10 – 3.14, using uv as the venv backend:
+
+```bash
+uvx nox                  # default session, every supported Python
+uvx nox -s tests-3.12    # a single version
+uvx nox -- -k brentq     # forward args to pytest
+```
+
+### Smoke test
+
+`scripts/smoke.py` imports the installed package, solves for √2 and asserts the
+result. It is deliberately a plain script with a module-level `assert` rather
+than a pytest test, because cibuildwheel runs it as `python scripts/smoke.py`
+inside each freshly built wheel's environment, where the dev dependencies do
+not exist.
+
+```bash
+make smoke               # uv run --frozen python scripts/smoke.py
 ```
 
 > **Note on `make cov`**: the target wipes `.c`/`.so` artifacts and
@@ -193,18 +220,20 @@ make build            # equivalent to: uv build
 | Target | Action |
 |---|---|
 | `venv` | Create the project venv via `uv venv` (`PYTHON_VERSION=3.10` by default) |
-| `lock` | Resolve and write `uv.lock` (`uv lock --upgrade --refresh`) |
+| `lock` | Resolve and write `uv.lock` (`uv lock --upgrade --resolution=highest --refresh`) |
 | `outdated` | Show outdated direct and transitive deps |
 | `sync` | Sync the venv with `uv.lock` (all groups + extras) |
 | `test` | Run the test suite without coverage |
 | `cov` / `test/cov` | Recompile extension with `CYTHON_TRACE=1` and run under `coverage.py` (no pytest-cov). Run `make sync` afterward to restore the fast build. |
 | `report` / `cov/report` | Print the coverage report from the last `make cov` |
 | `bench` | Run the benchmark suite (override args via `BENCH_ARGS=…`) |
+| `smoke` | Import-and-solve smoke test against the installed package |
 | `lint` / `lint/check` | Read-only `ruff check` |
 | `lint/fix` | **Rewrites files** — `ruff check --fix` |
 | `fmt` / `fmt/check` | Read-only `ruff format --check` |
 | `fmt/fix` | **Rewrites files** — `ruff format` |
-| `check` | `lint/check` + `fmt/check` (CI-safe) |
+| `typecheck` | Read-only `pyrefly check` over the project |
+| `check` | `lint/check` + `fmt/check` + `typecheck` (CI-safe) |
 | `build` / `dist` | Build sdist + wheel into `dist/` |
 | `clean` | Remove build artifacts and coverage data |
 
@@ -235,17 +264,56 @@ The project pins [ruff](https://docs.astral.sh/ruff/) (configuration in
 Ruff lints `.py` files only — `_brentq.pyx` is outside the ruff scope.
 
 ```bash
-make check            # lint + format check, no mutations (use this in CI)
+make check            # lint + format + type check, no mutations (use this in CI)
 make lint/fix         # rewrites files: ruff check --fix
 make fmt/fix          # rewrites files: ruff format
 ```
+
+## Type checking
+
+The project pins [pyrefly](https://pyrefly.org/) (configuration in
+`pyproject.toml` under `[tool.pyrefly]`) on the `strict` preset, with
+`python-version = "3.10"` so results do not drift with whichever interpreter
+the venv happens to hold.
+
+```bash
+make typecheck        # uv run --frozen pyrefly check
+```
+
+Two deliberate relaxations:
+
+- `tests/**` disables `implicit-any-parameter` and `implicit-any-lambda`.
+  `brentq` takes `Callable[..., float]` (it has to — `args` is forwarded to
+  `f`), so the bare lambdas the tests pass in cannot have inferable parameter
+  types. Every other `strict` check still applies to tests.
+- `setup.py` is excluded: a build script, not shipped code.
+
+Like ruff, pyrefly does not read `_brentq.pyx`. The type contract for the
+extension lives entirely in `_brentq.pyi`, so a change to the `.pyx` signature
+has to be mirrored there by hand.
+
+## Pre-commit hooks
+
+`.pre-commit-config.yaml` runs the pre-commit-hooks basics, ruff check, ruff
+format and pyrefly. CI enforces the same set via
+[prek](https://github.com/j178/prek), so installing the hooks locally is the
+cheapest way to avoid a red lint job:
+
+```bash
+uvx prek install              # or: uv run pre-commit install
+uvx prek run --all-files      # run everything now
+```
+
+The pyrefly hook is a `repo: local` hook that shells out to
+`uv run --frozen pyrefly check`, so the version that runs is always the one in
+`uv.lock` — there is no second pin to keep in sync.
 
 ## Layout
 
 ```
 src/cybrentq/
   _brentq.pyx           # the algorithm
-  _brentq.pyi           # type stubs for IDEs / mypy
+  _brentq.pyi           # type stubs for IDEs and pyrefly
   __init__.py           # re-exports brentq, RootResults, ConvergenceError
   py.typed              # PEP 561 marker
 tests/
@@ -255,10 +323,15 @@ tests/
   test_performance.py   # perf regression guard
 benchmarks/
   bench_brentq.py       # speed comparison vs scipy and pymodab
-Makefile                # venv, sync, test, cov, bench, lint, fmt, build
-pyproject.toml          # project metadata + ruff/coverage/pytest config
+scripts/
+  smoke.py              # import-and-solve check, also run by cibuildwheel
+setup.py                # Extension + cythonize; the PEP 517 backend calls it
+noxfile.py              # pytest across Python 3.10 - 3.14 via `uvx nox`
+Makefile                # venv, sync, test, cov, bench, lint, fmt, typecheck, build
+pyproject.toml          # project metadata + ruff/pyrefly/coverage/pytest config
+.pre-commit-config.yaml # hooks, enforced in CI via prek
 ```
 
 ## License
 
-MIT.
+MIT — see [`LICENSE`](LICENSE).

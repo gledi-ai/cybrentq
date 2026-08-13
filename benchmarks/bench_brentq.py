@@ -29,13 +29,16 @@ import statistics
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import cast
 
 from pymodab import find_root as modab_find_root
 from scipy.optimize import brentq as scipy_brentq
 
 from cybrentq import brentq as cy_brentq
 
-Problem = tuple[str, Callable[[float], float], float, float]
+ObjFn = Callable[[float], float]
+Solver = Callable[[ObjFn, float, float], object]
+Problem = tuple[str, ObjFn, float, float]
 
 PROBLEMS: list[Problem] = [
     ("x^2 - 2 (cheap)", lambda x: x * x - 2.0, 0.0, 2.0),
@@ -76,7 +79,17 @@ class Timing:
         return statistics.stdev(self.times_ns) if len(self.times_ns) > 1 else 0.0
 
 
-def _bench(impl, name: str, impl_label: str, f, a: float, b: float, n_calls: int, repeats: int, warmup: int) -> Timing:
+def _bench(
+    impl: Solver,
+    name: str,
+    impl_label: str,
+    f: ObjFn,
+    a: float,
+    b: float,
+    n_calls: int,
+    repeats: int,
+    warmup: int,
+) -> Timing:
     # Warm up.
     for _ in range(warmup):
         impl(f, a, b)
@@ -91,9 +104,9 @@ def _bench(impl, name: str, impl_label: str, f, a: float, b: float, n_calls: int
     return Timing(name=name, impl=impl_label, n_calls=n_calls, repeats=repeats, times_ns=times_ns)
 
 
-def _verify_agreement(f, a: float, b: float, name: str) -> None:
+def _verify_agreement(f: ObjFn, a: float, b: float, name: str) -> None:
     cy = cy_brentq(f, a, b)
-    sp = scipy_brentq(f, a, b)
+    sp = cast(float, scipy_brentq(f, a, b))
     mb = modab_find_root(f, a, b)
     if not math.isclose(cy, sp, rel_tol=1e-9, abs_tol=1e-9):
         raise AssertionError(f"{name}: cy/scipy disagree (cy={cy!r}, scipy={sp!r})")

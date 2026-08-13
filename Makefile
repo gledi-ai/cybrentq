@@ -1,7 +1,7 @@
 .DEFAULT_GOAL := help
 
 .PHONY: help venv lock outdated sync test cov test/cov report cov/report bench smoke build dist clean \
-        lint lint/fix lint/check fmt fmt/fix fmt/check check
+        lint lint/fix lint/check fmt fmt/fix fmt/check typecheck check
 
 BENCH_ARGS ?=
 
@@ -54,7 +54,10 @@ fmt fmt/check:  ## Run ruff formatter in check-only mode.
 fmt/fix:  ## WARNING: rewrites files on disk. Runs ruff formatter in place.
 	uv run --frozen ruff format .
 
-check: lint/check fmt/check  ## Run lint/check and fmt/check.
+typecheck:  ## Run the pyrefly type checker over the project.
+	uv run --frozen pyrefly check
+
+check: lint/check fmt/check typecheck  ## Run lint/check, fmt/check and typecheck.
 
 build dist:  ## Build the sdist and wheel into dist/.
 	uv build --clear

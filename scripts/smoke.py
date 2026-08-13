@@ -2,5 +2,10 @@
 
 from cybrentq import brentq
 
-assert abs(brentq(lambda x: x * x - 2, 0, 2) - 2**0.5) < 1e-10
+
+def _f(x: float) -> float:
+    return x * x - 2.0
+
+
+assert abs(brentq(_f, 0, 2) - 2**0.5) < 1e-10
 print("smoke ok")
