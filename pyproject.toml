@@ -44,14 +44,14 @@ scipy-stack = [
   "scipy==1.15.3; python_version < '3.14'",
   "scipy==1.17.1; python_version >= '3.14'",
 ]
-test = ["pytest==9.1.0", "coverage==7.14.1", { include-group = "scipy-stack" }]
-bench = ["pymodab==1.0.4", { include-group = "scipy-stack" }]
-build = ["cython==3.2.5", "setuptools>=77", "setuptools-scm>=8", "wheel"]
+test = ["pytest==9.1.1", "coverage==7.15.3", { include-group = "scipy-stack" }]
+bench = ["pymodab==1.0.5", { include-group = "scipy-stack" }]
+build = ["cython==3.2.9", "setuptools>=77", "setuptools-scm>=8", "wheel"]
 dev = [
   { include-group = "test" },
   { include-group = "bench" },
   { include-group = "build" },
-  "ruff==0.15.19",
+  "ruff==0.16.2",
 ]
 
 [tool.setuptools]
