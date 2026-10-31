@@ -1,0 +1,49 @@
+#:schema https://www.schemastore.org/prek.json
+
+default_language_version = { python = "python3.14" }
+
+[[repos]]
+repo = "https://github.com/pre-commit/pre-commit-hooks"
+rev = "v6.0.0"
+hooks = [
+  { id = "trailing-whitespace" },
+  { id = "end-of-file-fixer", exclude = '^.+\.html$' },
+  { id = "check-json", exclude = '^\.vscode\/' },
+  { id = "check-yaml" },
+  { id = "check-toml" },
+  { id = "check-added-large-files", exclude = "uv.lock" },
+  { id = "check-ast" },
+  { id = "debug-statements" },
+  { id = "check-merge-conflict" },
+]
+
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "ruff-check"
+name = "Ruff (lint)"
+entry = "uv run --locked --group dev ruff check --force-exclude"
+language = "system"
+types_or = ["python", "pyi", "jupyter"]
+require_serial = true
+args = ["--config=pyproject.toml"]
+
+[[repos.hooks]]
+id = "ruff-format"
+name = "Ruff (format check)"
+entry = "uv run --locked --group dev ruff format --force-exclude"
+language = "system"
+types_or = ["python", "pyi", "jupyter", "markdown"]
+require_serial = true
+args = ["--check", "--config=pyproject.toml"]
+
+[[repos.hooks]]
+id = "pyrefly"
+name = "Pyrefly (type checking)"
+entry = "uv run --locked --group dev pyrefly check"
+language = "system"
+files = '(\.pyi?$|^pyproject\.toml$|^uv\.lock$)'
+pass_filenames = false
+require_serial = true
+args = ["--summarize-errors"]

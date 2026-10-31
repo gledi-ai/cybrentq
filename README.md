@@ -299,19 +299,20 @@ has to be mirrored there by hand.
 
 ## Pre-commit hooks
 
-`.pre-commit-config.yaml` runs the pre-commit-hooks basics, ruff check, ruff
-format and pyrefly. CI enforces the same set via
+`prek.toml` runs the pre-commit-hooks basics, ruff lint and format checks,
+and pyrefly. CI enforces the same set via
 [prek](https://github.com/j178/prek), so installing the hooks locally is the
 cheapest way to avoid a red lint job:
 
 ```bash
-uvx prek install              # or: uv run pre-commit install
+uvx prek install
 uvx prek run --all-files      # run everything now
 ```
 
-The pyrefly hook is a `repo: local` hook that shells out to
-`uv run --frozen pyrefly check`, so the version that runs is always the one in
-`uv.lock` — there is no second pin to keep in sync.
+The Ruff and Pyrefly hooks use `repo = "local"` and run through
+`uv run --locked --group dev`, so their versions come from `uv.lock` and an
+outdated lockfile fails the check. Pyrefly checks the whole project with
+`--summarize-errors` when Python files, `pyproject.toml`, or `uv.lock` change.
 
 ## Layout
 
@@ -334,7 +335,7 @@ setup.py                # Extension + cythonize; the PEP 517 backend calls it
 noxfile.py              # pytest across Python 3.11 - 3.15 via `uvx nox`
 Makefile                # venv, sync, test, cov, bench, lint, fmt, typecheck, build
 pyproject.toml          # project metadata + ruff/pyrefly/coverage/pytest config
-.pre-commit-config.yaml # hooks, enforced in CI via prek
+prek.toml              # hooks, enforced in CI via prek
 ```
 
 ## License

@@ -18,44 +18,44 @@ lock:  ## Resolve and write uv.lock (WARNING: upgrades all dependencies and rewr
 	uv lock --upgrade --resolution=highest --refresh
 
 outdated:  ## Show outdated direct and transitive dependencies.
-	uv tree --frozen --outdated
+	uv tree --locked --outdated
 
 sync:  ## Sync the venv with uv.lock (All groups and extras).
-	uv sync --frozen --all-extras --all-groups --link-mode=copy --refresh
+	uv sync --locked --all-extras --all-groups --link-mode=copy --refresh
 
 test:  ## Run the test suite without coverage.
-	uv run --frozen pytest --verbose
+	uv run --locked pytest --verbose
 
 cov test/cov:  ## Recompile extension with line-tracing and run coverage (uses coverage.py, not pytest-cov).
 	find src -name '*.c' -delete
 	find src -name '*.so' -delete
-	CYTHON_TRACE=1 uv sync --frozen --all-groups --link-mode=copy --reinstall-package cybrentq
-	uv run --frozen coverage erase
-	uv run --frozen coverage run -m pytest --verbose
+	CYTHON_TRACE=1 uv sync --locked --all-groups --link-mode=copy --reinstall-package cybrentq
+	uv run --locked coverage erase
+	uv run --locked coverage run -m pytest --verbose
 
 report cov/report:  ## Print the coverage report from the last test-cov run.
-	uv run --frozen coverage report
+	uv run --locked coverage report
 
 bench:  ## Run the benchmark suite (override args via BENCH_ARGS).
-	uv run --frozen python benchmarks/bench_brentq.py $(BENCH_ARGS)
+	uv run --locked python benchmarks/bench_brentq.py $(BENCH_ARGS)
 
 smoke:  ## Run the import-and-solve smoke test against the installed package.
-	uv run --frozen python scripts/smoke.py
+	uv run --locked python scripts/smoke.py
 
 lint lint/check:  ## Run ruff linter in check-only mode.
-	uv run --frozen ruff check .
+	uv run --locked ruff check .
 
 lint/fix:  ## WARNING: rewrites files on disk. Runs ruff linter with --fix.
-	uv run --frozen ruff check --fix .
+	uv run --locked ruff check --fix .
 
 fmt fmt/check:  ## Run ruff formatter in check-only mode.
-	uv run --frozen ruff format --check .
+	uv run --locked ruff format --check .
 
 fmt/fix:  ## WARNING: rewrites files on disk. Runs ruff formatter in place.
-	uv run --frozen ruff format .
+	uv run --locked ruff format .
 
 typecheck:  ## Run the pyrefly type checker over the project.
-	uv run --frozen pyrefly check
+	uv run --locked pyrefly check
 
 check: lint/check fmt/check typecheck  ## Run lint/check, fmt/check and typecheck.
 
