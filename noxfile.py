@@ -14,10 +14,12 @@ from __future__ import annotations
 import nox  # type: ignore[import]
 
 nox.options.default_venv_backend = "uv"
+# Managed interpreters include the headers needed to compile the Cython extension.
+nox.options.download_python = "always"
 nox.options.reuse_existing_virtualenvs = True
 nox.options.sessions = ["tests"]
 
-PYTHON_VERSIONS = ["3.10", "3.11", "3.12", "3.13", "3.14"]
+PYTHON_VERSIONS = ["3.11", "3.12", "3.13", "3.14", "3.15"]
 
 
 @nox.session(python=PYTHON_VERSIONS)
@@ -26,7 +28,7 @@ def tests(session: nox.Session) -> None:
     session.run_install(
         "uv",
         "sync",
-        "--frozen",
+        "--locked",
         "--group",
         "test",
         env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},

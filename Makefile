@@ -5,13 +5,13 @@
 
 BENCH_ARGS ?=
 
-PYTHON_VERSION ?= 3.10
+PYTHON_VERSION ?= 3.11
 GROUP ?= dev
 
 help:  ## Show this help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z0-9_\/-][a-zA-Z0-9_\/ -]*:.*?## / {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-venv:  ## Create the project virtualenv via uv (PYTHON_VERSION=3.10).
+venv:  ## Create the project virtualenv via uv (PYTHON_VERSION=3.11).
 	uv venv --seed --link-mode=copy --prompt=cybrentq --python $(PYTHON_VERSION)
 
 lock:  ## Resolve and write uv.lock (WARNING: upgrades all dependencies and rewrites uv.lock).

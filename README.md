@@ -9,7 +9,7 @@ interpolation step would not make adequate progress.
 The public API mirrors the relevant subset of `scipy.optimize.brentq` and can
 serve as a drop-in replacement in most code paths.
 
-Requires **Python 3.10 or newer** and a working C compiler (used during
+Requires **Python 3.11 or newer** and a working C compiler (used during
 install to compile the Cython extension).
 
 ## Quick start
@@ -22,7 +22,7 @@ dependency management, with a `Makefile` wrapping the most common commands.
 #   curl -LsSf https://astral.sh/uv/install.sh | sh   (macOS / Linux)
 #   powershell -c "irm https://astral.sh/uv/install.ps1 | iex"   (Windows)
 
-# Recommended: use the Makefile. PYTHON_VERSION=3.10 by default.
+# Recommended: use the Makefile. PYTHON_VERSION=3.11 by default.
 # The Cython extension is compiled during `make sync`.
 make venv
 make sync
@@ -36,7 +36,7 @@ invocations.
 If you want a minimal install without the Makefile:
 
 ```bash
-uv venv --python 3.10       # create the venv
+uv venv --python 3.11       # create the venv
 uv sync                     # install project + default groups, compile Cython
 uv sync --only-group test   # install just the test group, nothing else
 uv sync --no-dev            # consumer-style install (no dev groups)
@@ -117,13 +117,18 @@ uv run pytest tests/test_performance.py     # perf regression guard (CI-safe)
 
 ### Every supported Python at once
 
-`noxfile.py` drives pytest against 3.10 – 3.14, using uv as the venv backend:
+`noxfile.py` drives pytest against 3.11 – 3.15, using uv as the venv backend
+and managed Python interpreters that include the headers needed to compile the
+Cython extension:
 
 ```bash
 uvx nox                  # default session, every supported Python
 uvx nox -s tests-3.12    # a single version
 uvx nox -- -k brentq     # forward args to pytest
 ```
+
+If an existing Nox environment uses a system Python without development headers,
+recreate it once with `uvx nox --no-reuse-existing-virtualenvs`.
 
 ### Smoke test
 
@@ -219,7 +224,7 @@ make build            # equivalent to: uv build
 
 | Target | Action |
 |---|---|
-| `venv` | Create the project venv via `uv venv` (`PYTHON_VERSION=3.10` by default) |
+| `venv` | Create the project venv via `uv venv` (`PYTHON_VERSION=3.11` by default) |
 | `lock` | Resolve and write `uv.lock` (`uv lock --upgrade --resolution=highest --refresh`) |
 | `outdated` | Show outdated direct and transitive deps |
 | `sync` | Sync the venv with `uv.lock` (all groups + extras) |
@@ -273,7 +278,7 @@ make fmt/fix          # rewrites files: ruff format
 
 The project pins [pyrefly](https://pyrefly.org/) (configuration in
 `pyproject.toml` under `[tool.pyrefly]`) on the `strict` preset, with
-`python-version = "3.10"` so results do not drift with whichever interpreter
+`python-version = "3.11"` so results do not drift with whichever interpreter
 the venv happens to hold.
 
 ```bash
@@ -326,7 +331,7 @@ benchmarks/
 scripts/
   smoke.py              # import-and-solve check, also run by cibuildwheel
 setup.py                # Extension + cythonize; the PEP 517 backend calls it
-noxfile.py              # pytest across Python 3.10 - 3.14 via `uvx nox`
+noxfile.py              # pytest across Python 3.11 - 3.15 via `uvx nox`
 Makefile                # venv, sync, test, cov, bench, lint, fmt, typecheck, build
 pyproject.toml          # project metadata + ruff/pyrefly/coverage/pytest config
 .pre-commit-config.yaml # hooks, enforced in CI via prek

@@ -7,7 +7,7 @@ name = "cybrentq"
 dynamic = ["version"]
 description = "A Cython implementation of Brent's root-finding method"
 readme = "README.md"
-requires-python = ">=3.10,<4.0"
+requires-python = ">=3.11,<4.0"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
@@ -25,11 +25,11 @@ keywords = [
 ]
 classifiers = [
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Programming Language :: Cython",
   "Topic :: Scientific/Engineering :: Mathematics",
 ]
@@ -42,20 +42,20 @@ Documentation = "https://github.com/gledi-ai/cybrentq"
 
 [dependency-groups]
 scipy-stack = [
-  "numpy==2.2.6; python_version < '3.14'",
-  "numpy==2.4.6; python_version >= '3.14'",
-  "scipy==1.15.3; python_version < '3.14'",
-  "scipy==1.17.1; python_version >= '3.14'",
+  "numpy~=2.4.0; python_version < '3.12'",
+  "numpy~=2.5.0; python_version >= '3.12'",
+  "scipy~=1.17.0; python_version < '3.12'",
+  "scipy~=1.18.0; python_version >= '3.12'",
 ]
-test = ["pytest==9.1.1", "coverage==7.15.4", { include-group = "scipy-stack" }]
-bench = ["pymodab==1.0.5", { include-group = "scipy-stack" }]
-build = ["cython==3.2.9", "setuptools>=77", "setuptools-scm>=8", "wheel"]
+test = ["pytest~=9.1", "coverage~=7.17", { include-group = "scipy-stack" }]
+bench = ["pymodab~=1.0", { include-group = "scipy-stack" }]
+build = ["cython~=3.3.0", "setuptools>=77", "setuptools-scm~=10.3", "wheel"]
 dev = [
   { include-group = "test" },
   { include-group = "bench" },
   { include-group = "build" },
-  "ruff==0.16.2",
-  "pyrefly==1.2.0",
+  "ruff~=0.17.0",
+  "pyrefly~=1.4.0",
 ]
 
 [tool.setuptools]
@@ -71,8 +71,8 @@ fallback_version = "0.0.0"
 
 [tool.uv]
 package = true
-exclude-newer = "7d"
-exclude-newer-package = { ruff = false, pyrefly = false }
+exclude-newer = "1 week"
+exclude-newer-package = { ruff = "1 day", pyrefly = "1 day" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -90,7 +90,7 @@ precision = 2
 
 [tool.pyrefly]
 preset = "strict"
-python-version = "3.10"
+python-version = "3.11"
 # Replaces pyrefly's defaults; .gitignore already covers .venv/__pycache__/build
 # via use-ignore-files. setup.py is a build script, not shipped code.
 project-excludes = ["setup.py"]
@@ -106,7 +106,7 @@ implicit-any-lambda = false
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py311"
 
 [tool.ruff.lint]
 select = [
