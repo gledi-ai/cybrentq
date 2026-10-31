@@ -120,7 +120,10 @@ def run(n_calls: int, repeats: int, warmup: int) -> None:
         f"(N={n_calls} solves/repeat, {repeats} repeats, "
         f"{warmup} warmup solves)\n"
     )
-    header = f"{'problem':<32} {'scipy (µs)':>12} {'cython (µs)':>12} {'modab (µs)':>12} {'cy/sc':>8} {'mb/sc':>8}"
+    header = (
+        f"{'problem':<32} {'scipy (µs)':>12} {'cython (µs)':>12} "
+        f"{'modab (µs)':>12} {'cy/sc':>8} {'mb/sc':>8}"
+    )
     print(header)
     print("-" * len(header))
 
@@ -140,7 +143,10 @@ def run(n_calls: int, repeats: int, warmup: int) -> None:
         mb_speedup = sp.best_ns / mb.best_ns
         cy_speedups.append(cy_speedup)
         mb_speedups.append(mb_speedup)
-        print(f"{name:<32} {sp_per:>12.3f} {cy_per:>12.3f} {mb_per:>12.3f} {cy_speedup:>7.2f}x {mb_speedup:>7.2f}x")
+        print(
+            f"{name:<32} {sp_per:>12.3f} {cy_per:>12.3f} {mb_per:>12.3f} "
+            f"{cy_speedup:>7.2f}x {mb_speedup:>7.2f}x"
+        )
 
     print("-" * len(header))
 
@@ -156,9 +162,15 @@ def run(n_calls: int, repeats: int, warmup: int) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--n-calls", type=int, default=2000, help="solves per timed batch (default: 2000)")
-    parser.add_argument("--repeats", type=int, default=5, help="how many timed batches to run (default: 5)")
-    parser.add_argument("--warmup", type=int, default=10, help="warmup solves before timing (default: 10)")
+    parser.add_argument(
+        "--n-calls", type=int, default=2000, help="solves per timed batch (default: 2000)"
+    )
+    parser.add_argument(
+        "--repeats", type=int, default=5, help="how many timed batches to run (default: 5)"
+    )
+    parser.add_argument(
+        "--warmup", type=int, default=10, help="warmup solves before timing (default: 10)"
+    )
     args = parser.parse_args()
     run(n_calls=args.n_calls, repeats=args.repeats, warmup=args.warmup)
 

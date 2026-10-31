@@ -6,7 +6,9 @@ from setuptools import Extension, setup
 try:
     from Cython.Build import cythonize
 except ImportError as exc:  # pragma: no cover - build-time error
-    raise SystemExit("Cython is required to build cybrentq. Install it with `pip install cython`.") from exc
+    raise SystemExit(
+        "Cython is required to build cybrentq. Install it with `pip install cython`."
+    ) from exc
 
 
 # Reasonable optimisation defaults. We deliberately avoid -ffast-math because

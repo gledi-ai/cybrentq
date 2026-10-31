@@ -58,7 +58,9 @@ class TestRootAgreement:
             # Two orders of magnitude is a generous bound; in practice the
             # residuals are usually within a factor of 2.
             ratio = cy_res / sp_res if sp_res > 0 else 1.0
-            assert 1e-2 < ratio < 1e2 or cy_res < 1e-10, f"{name}: cy_res={cy_res!r}, sp_res={sp_res!r}"
+            assert 1e-2 < ratio < 1e2 or cy_res < 1e-10, (
+                f"{name}: cy_res={cy_res!r}, sp_res={sp_res!r}"
+            )
 
 
 class TestIterationParity:
@@ -67,7 +69,9 @@ class TestIterationParity:
     def test_iteration_count_matches_scipy(self, problem):
         name, f, a, b, _expected = problem
         _, cy_info, _, sp_info = _both(f, a, b)
-        assert cy_info.iterations == sp_info.iterations, f"{name}: cy={cy_info.iterations}, scipy={sp_info.iterations}"
+        assert cy_info.iterations == sp_info.iterations, (
+            f"{name}: cy={cy_info.iterations}, scipy={sp_info.iterations}"
+        )
 
     def test_function_call_count_matches_scipy(self, problem):
         name, f, a, b, _expected = problem

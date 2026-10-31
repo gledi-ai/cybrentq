@@ -62,7 +62,7 @@ from cybrentq import brentq
 root = brentq(lambda x: x * x - 2.0, 0.0, 2.0)
 
 # Pass extra arguments via the args tuple
-root = brentq(lambda x, target: x ** 3 - target, 0.0, 5.0, args=(27.0,))
+root = brentq(lambda x, target: x**3 - target, 0.0, 5.0, args=(27.0,))
 
 # Diagnostics
 root, info = brentq(lambda x: math.cos(x) - x, 0.0, 1.0, full_output=True)

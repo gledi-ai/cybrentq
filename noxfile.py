@@ -9,7 +9,8 @@ Run pytest against every supported Python version:
 
 from __future__ import annotations
 
-# We are running nox via `uvx nox`, so we can be sure that the nox package is available in the environment.
+# We are running nox via `uvx nox`, so we can be sure that it runs even
+# when nox is not directly installed.
 import nox  # type: ignore[import]
 
 nox.options.default_venv_backend = "uv"

@@ -105,7 +105,7 @@ implicit-any-parameter = false
 implicit-any-lambda = false
 
 [tool.ruff]
-line-length = 120
+line-length = 100
 target-version = "py310"
 
 [tool.ruff.lint]
